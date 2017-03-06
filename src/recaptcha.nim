@@ -10,7 +10,7 @@ const
 
 type
   ReCaptcha* = object
-    ##
+    ## reCAPTCHA client information, used to render the reCAPTCHA input and verify user responses.
     secret: string
       ## The reCAPTCHA secret key.
     siteKey: string
@@ -20,6 +20,9 @@ type
     ## Error thrown if something goes wrong whilst attempting to verify a captcha response.
 
 proc initReCaptcha*(secret, siteKey: string): ReCaptcha =
+  ## Initialise a ReCaptcha instance with the given secret key and site key.
+  ##
+  ## The secret key and site key can be generated at https://www.google.com/recaptcha/admin
   result = ReCaptcha(
     secret: secret,
     siteKey: siteKey
@@ -77,7 +80,7 @@ proc verify*(rc: ReCaptcha, reCaptchaResponse: string): Future[bool] {.async, ra
   })
   result = await checkVerification(multiPart)
 
-when isMainModule:
+when not defined(nimdoc) and isMainModule:
   import os, jester
 
   var captcha: ReCaptcha
@@ -96,7 +99,7 @@ when isMainModule:
 
     post "/":
       try:
-        echo ("Result for captcha: ", waitFor captcha.verify(request.formData["g-recaptcha-response"].body, request.host))
+        echo("Result for captcha: ", waitFor captcha.verify(request.formData["g-recaptcha-response"].body, request.host))
       except:
         echo "[ERROR]: " & getCurrentExceptionMsg()
 
