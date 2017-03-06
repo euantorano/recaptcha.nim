@@ -1231,8 +1231,8 @@ function main() {
   <ul class="simple simple-toc-section">
       <li><a class="reference" href="#initReCaptcha,string,string"
     title="initReCaptcha(secret, siteKey: string): ReCaptcha"><wbr />init<wbr />Re<wbr />Captcha<span class="attachedType" style="visibility:hidden">ReCaptcha</span></a></li>
-  <li><a class="reference" href="#render,ReCaptcha"
-    title="render(rc: ReCaptcha): string"><wbr />render<span class="attachedType" style="visibility:hidden">ReCaptcha</span></a></li>
+  <li><a class="reference" href="#render,ReCaptcha,bool"
+    title="render(rc: ReCaptcha; includeNoScript: bool = false): string"><wbr />render<span class="attachedType" style="visibility:hidden">ReCaptcha</span></a></li>
   <li><a class="reference" href="#$,ReCaptcha"
     title="`$`(rc: ReCaptcha): string"><wbr />`$`<span class="attachedType" style="visibility:hidden">ReCaptcha</span></a></li>
   <li><a class="reference" href="#verify,ReCaptcha,string,string"
@@ -1264,9 +1264,9 @@ function main() {
 <dd>
 reCAPTCHA client information, used to render the reCAPTCHA input and verify user responses.
 &nbsp;&nbsp;<a
-href="/tree/master/src/recaptcha.nim#L12"
+href="/tree/master/src/recaptcha.nim#L33"
 class="link-seesrc" target="_blank">Source</a>
-<a href="/edit/devel/src/recaptcha.nim#L12" class="link-seesrc" target="_blank" >Edit</a>
+<a href="/edit/devel/src/recaptcha.nim#L33" class="link-seesrc" target="_blank" >Edit</a>
 
 </dd>
 <dt id="CaptchaVerificationError"><a name="CaptchaVerificationError"></a><pre><span class="Identifier">CaptchaVerificationError</span> <span class="Other">=</span> <span class="Keyword">object</span> <span class="Keyword">of</span> <span class="Identifier">Exception</span>
@@ -1274,9 +1274,9 @@ class="link-seesrc" target="_blank">Source</a>
 <dd>
 Error thrown if something goes wrong whilst attempting to verify a captcha response.
 &nbsp;&nbsp;<a
-href="/tree/master/src/recaptcha.nim#L19"
+href="/tree/master/src/recaptcha.nim#L40"
 class="link-seesrc" target="_blank">Source</a>
-<a href="/edit/devel/src/recaptcha.nim#L19" class="link-seesrc" target="_blank" >Edit</a>
+<a href="/edit/devel/src/recaptcha.nim#L40" class="link-seesrc" target="_blank" >Edit</a>
 
 </dd>
 
@@ -1290,27 +1290,29 @@ class="link-seesrc" target="_blank">Source</a>
 <p>The secret key and site key can be generated at <a class="reference external" href="https://www.google.com/recaptcha/admin">https://www.google.com/recaptcha/admin</a></p>
 
 &nbsp;&nbsp;<a
-href="/tree/master/src/recaptcha.nim#L22"
+href="/tree/master/src/recaptcha.nim#L43"
 class="link-seesrc" target="_blank">Source</a>
-<a href="/edit/devel/src/recaptcha.nim#L22" class="link-seesrc" target="_blank" >Edit</a>
+<a href="/edit/devel/src/recaptcha.nim#L43" class="link-seesrc" target="_blank" >Edit</a>
 
 </dd>
-<dt id="render"><a name="render,ReCaptcha"></a><pre><span class="Keyword">proc</span> <span class="Identifier">render</span><span class="Other">(</span><span class="Identifier">rc</span><span class="Other">:</span> <span class="Identifier">ReCaptcha</span><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">string</span> <span class="Other pragmabegin">{.</span><div class="pragma"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></div><span class="Other pragmaend">.}</span></pre></dt>
+<dt id="render"><a name="render,ReCaptcha,bool"></a><pre><span class="Keyword">proc</span> <span class="Identifier">render</span><span class="Other">(</span><span class="Identifier">rc</span><span class="Other">:</span> <span class="Identifier">ReCaptcha</span><span class="Other">;</span> <span class="Identifier">includeNoScript</span><span class="Other">:</span> <span class="Identifier">bool</span> <span class="Other">=</span> <span class="Identifier">false</span><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">string</span> <span class="Other pragmabegin">{.</span><div class="pragma"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></div><span class="Other pragmaend">.}</span></pre></dt>
 <dd>
-Render the required code to display the captcha.
+<p>Render the required code to display the captcha.</p>
+<p>If you set <cite>includeNoScript</cite> to <cite>true</cite>, then the <cite>&lt;noscript&gt;</cite> element required to support browsers without JS will be included in the output. By default, this is disabled as you have to modify the settings for your reCAPTCHA domain to set the security level to the minimum level to support this. For more information, see the reCAPTCHA support page: <a class="reference external" href="https://developers.google.com/recaptcha/docs/faq#does-recaptcha-support-users-that-dont-have-javascript-enabled">https://developers.google.com/recaptcha/docs/faq#does-recaptcha-support-users-that-dont-have-javascript-enabled</a></p>
+
 &nbsp;&nbsp;<a
-href="/tree/master/src/recaptcha.nim#L31"
+href="/tree/master/src/recaptcha.nim#L52"
 class="link-seesrc" target="_blank">Source</a>
-<a href="/edit/devel/src/recaptcha.nim#L31" class="link-seesrc" target="_blank" >Edit</a>
+<a href="/edit/devel/src/recaptcha.nim#L52" class="link-seesrc" target="_blank" >Edit</a>
 
 </dd>
 <dt id="$"><a name="$,ReCaptcha"></a><pre><span class="Keyword">proc</span> <span class="Identifier">`$`</span><span class="Other">(</span><span class="Identifier">rc</span><span class="Other">:</span> <span class="Identifier">ReCaptcha</span><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">string</span> <span class="Other pragmabegin">{.</span><div class="pragma"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></div><span class="Other pragmaend">.}</span></pre></dt>
 <dd>
 Render the required code to display the captcha.
 &nbsp;&nbsp;<a
-href="/tree/master/src/recaptcha.nim#L39"
+href="/tree/master/src/recaptcha.nim#L70"
 class="link-seesrc" target="_blank">Source</a>
-<a href="/edit/devel/src/recaptcha.nim#L39" class="link-seesrc" target="_blank" >Edit</a>
+<a href="/edit/devel/src/recaptcha.nim#L70" class="link-seesrc" target="_blank" >Edit</a>
 
 </dd>
 <dt id="verify"><a name="verify,ReCaptcha,string,string"></a><pre><span class="Keyword">proc</span> <span class="Identifier">verify</span><span class="Other">(</span><span class="Identifier">rc</span><span class="Other">:</span> <span class="Identifier">ReCaptcha</span><span class="Other">;</span> <span class="Identifier">reCaptchaResponse</span><span class="Other">,</span> <span class="Identifier">remoteIp</span><span class="Other">:</span> <span class="Identifier">string</span><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">Future</span><span class="Other">[</span><span class="Identifier">bool</span><span class="Other">]</span> <span class="Other pragmabegin">{.</span><div class="pragma"><span class="Identifier">async</span><span class="Other">,</span>
@@ -1318,9 +1320,9 @@ class="link-seesrc" target="_blank">Source</a>
 <dd>
 Verify the given reCAPTCHA response, from the given remote IP.
 &nbsp;&nbsp;<a
-href="/tree/master/src/recaptcha.nim#L66"
+href="/tree/master/src/recaptcha.nim#L97"
 class="link-seesrc" target="_blank">Source</a>
-<a href="/edit/devel/src/recaptcha.nim#L66" class="link-seesrc" target="_blank" >Edit</a>
+<a href="/edit/devel/src/recaptcha.nim#L97" class="link-seesrc" target="_blank" >Edit</a>
 
 </dd>
 <dt id="verify"><a name="verify,ReCaptcha,string"></a><pre><span class="Keyword">proc</span> <span class="Identifier">verify</span><span class="Other">(</span><span class="Identifier">rc</span><span class="Other">:</span> <span class="Identifier">ReCaptcha</span><span class="Other">;</span> <span class="Identifier">reCaptchaResponse</span><span class="Other">:</span> <span class="Identifier">string</span><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">Future</span><span class="Other">[</span><span class="Identifier">bool</span><span class="Other">]</span> <span class="Other pragmabegin">{.</span><div class="pragma"><span class="Identifier">async</span><span class="Other">,</span>
@@ -1328,9 +1330,9 @@ class="link-seesrc" target="_blank">Source</a>
 <dd>
 Verify the given reCAPTCHA response.
 &nbsp;&nbsp;<a
-href="/tree/master/src/recaptcha.nim#L75"
+href="/tree/master/src/recaptcha.nim#L106"
 class="link-seesrc" target="_blank">Source</a>
-<a href="/edit/devel/src/recaptcha.nim#L75" class="link-seesrc" target="_blank" >Edit</a>
+<a href="/edit/devel/src/recaptcha.nim#L106" class="link-seesrc" target="_blank" >Edit</a>
 
 </dd>
 
@@ -1343,7 +1345,7 @@ class="link-seesrc" target="_blank">Source</a>
       <div class="twelve-columns footer">
         <span class="nim-sprite"></span>
         <br/>
-        <small>Made with Nim. Generated: 2017-03-06 20:28:12 UTC</small>
+        <small>Made with Nim. Generated: 2017-03-06 22:17:59 UTC</small>
       </div>
     </div>
   </div>
