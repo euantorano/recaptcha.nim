@@ -75,7 +75,7 @@ proc checkVerification(mpd: MultipartData): Future[bool] {.async, raises: [Captc
   let
     client = newAsyncHttpClient()
     response = await client.post(VerifyUrl, multipart=mpd)
-    jsonContent = parseJson(response.body)
+    jsonContent = parseJson(await response.body)
     success = jsonContent.getOrDefault("success")
     errors = jsonContent.getOrDefault("error-codes")
 
