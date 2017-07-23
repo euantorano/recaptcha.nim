@@ -1,6 +1,6 @@
 # Package
 
-version       = "1.0.1"
+version       = "1.0.2"
 author        = "Euan T"
 description   = "reCAPTCHA support for Nim, supporting rendering a capctcha and verifying a user\'s response."
 license       = "BSD3"

@@ -71,11 +71,11 @@ proc `$`*(rc: ReCaptcha): string =
   ## Render the required code to display the captcha.
   result = rc.render()
 
-proc checkVerification(mpd: MultipartData): Future[bool] {.async, raises: [CaptchaVerificationError].} =
+proc checkVerification(mpd: MultipartData): Future[bool] {.async.} =
   let
     client = newAsyncHttpClient()
     response = await client.post(VerifyUrl, multipart=mpd)
-    jsonContent = parseJson(response.body)
+    jsonContent = parseJson(await response.body)
     success = jsonContent.getOrDefault("success")
     errors = jsonContent.getOrDefault("error-codes")
 
@@ -94,7 +94,7 @@ proc checkVerification(mpd: MultipartData): Future[bool] {.async, raises: [Captc
 
   result = if success != nil: success.getBVal() else: false
 
-proc verify*(rc: ReCaptcha, reCaptchaResponse, remoteIp: string): Future[bool] {.async, raises: [CaptchaVerificationError].} =
+proc verify*(rc: ReCaptcha, reCaptchaResponse, remoteIp: string): Future[bool] {.async.} =
   ## Verify the given reCAPTCHA response, from the given remote IP.
   let multiPart = newMultipartData({
     "secret": rc.secret,
@@ -103,7 +103,7 @@ proc verify*(rc: ReCaptcha, reCaptchaResponse, remoteIp: string): Future[bool] {
   })
   result = await checkVerification(multiPart)
 
-proc verify*(rc: ReCaptcha, reCaptchaResponse: string): Future[bool] {.async, raises: [CaptchaVerificationError].} =
+proc verify*(rc: ReCaptcha, reCaptchaResponse: string): Future[bool] {.async.} =
   ## Verify the given reCAPTCHA response.
   let multiPart = newMultipartData({
     "secret": rc.secret,
