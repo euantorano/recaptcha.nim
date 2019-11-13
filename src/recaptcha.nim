@@ -92,7 +92,7 @@ proc checkVerification(mpd: MultipartData): Future[bool] {.async.} =
         raise newException(CaptchaVerificationError, "The response parameter is invalid or malformed.")
       else: discard
 
-  result = if success != nil: success.getBVal() else: false
+  result = if success != nil: success.getBool() else: false
 
 proc verify*(rc: ReCaptcha, reCaptchaResponse, remoteIp: string): Future[bool] {.async.} =
   ## Verify the given reCAPTCHA response, from the given remote IP.
