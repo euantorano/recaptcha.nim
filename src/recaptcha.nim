@@ -4,9 +4,9 @@ import asyncdispatch, httpclient, json
 
 const
   VerifyUrl: string = "https://www.google.com/recaptcha/api/siteverify"
-  VerifyUrlCN: string = "https://recaptcha.net/recaptcha/api/siteverify"
+  VerifyUrlReplace: string = "https://recaptcha.net/recaptcha/api/siteverify"
   CaptchaScript: string = r"""<script src="https://www.google.com/recaptcha/api.js" async defer></script>"""
-  CaptchaScriptCN: string = r"""<script src="https://recaptcha.net/recaptcha/api.js" async defer></script>"""
+  CaptchaScriptReplace: string = r"""<script src="https://recaptcha.net/recaptcha/api.js" async defer></script>"""
   CaptchaElementStart: string = r"""<div class="g-recaptcha" data-sitekey=""""
   CaptchaElementEnd: string = r""""></div>"""
   NoScriptElementStart: string = r"""<noscript>
@@ -14,7 +14,7 @@ const
     <div style="width: 302px; height: 422px; position: relative;">
       <div style="width: 302px; height: 422px; position: absolute;">
         <iframe src="https://www.google.com/recaptcha/api/fallback?k="""
-  NoScriptElementStartCN: string = r"""<noscript>
+  NoScriptElementStartReplace: string = r"""<noscript>
   <div>
     <div style="width: 302px; height: 422px; position: relative;">
       <div style="width: 302px; height: 422px; position: absolute;">
@@ -45,19 +45,21 @@ type
       ## The reCAPTCHA secret key.
     siteKey: string
       ## The reCAPTCHA site key.
-    language: Language
+    replace: bool
+      ## Default use www.google.com.If true, use "www.recaptcha.net".
+      ## Docs in https://developers.google.com/recaptcha/docs/faq#can-i-use-recaptcha-globally.
 
   CaptchaVerificationError* = object of Exception
     ## Error thrown if something goes wrong whilst attempting to verify a captcha response.
 
-proc initReCaptcha*(secret, siteKey: string, language = EN): ReCaptcha =
+proc initReCaptcha*(secret, siteKey: string, replace = false): ReCaptcha =
   ## Initialise a ReCaptcha instance with the given secret key and site key.
   ##
   ## The secret key and site key can be generated at https://www.google.com/recaptcha/admin
   result = ReCaptcha(
     secret: secret,
     siteKey: siteKey,
-    language: language
+    replace: replace
   )
 
 proc render*(rc: ReCaptcha, includeNoScript: bool = false): string =
@@ -70,19 +72,17 @@ proc render*(rc: ReCaptcha, includeNoScript: bool = false): string =
   result.add(rc.siteKey)
   result.add(CaptchaElementEnd)
   result.add("\n")
-  case rc.language
-  of EN:
+  if not rc.replace:
     result.add(CaptchaScript)
-  of CN:
-    result.add(CaptchaScriptCN)
+  else:
+    result.add(CaptchaScriptReplace)
 
   if includeNoScript:
     result.add("\n")
-    case rc.language
-    of EN:
+    if not rc.replace:
       result.add(NoScriptElementStart)
-    of CN:
-      result.add(NoScriptElementStartCN)
+    else:
+      result.add(NoScriptElementStartReplace)
     result.add(rc.siteKey)
     result.add(NoScriptElementEnd)
 
@@ -90,15 +90,14 @@ proc `$`*(rc: ReCaptcha): string =
   ## Render the required code to display the captcha.
   result = rc.render()
 
-proc checkVerification(mpd: MultipartData, language = EN): Future[bool] {.async.} =
+proc checkVerification(mpd: MultipartData, replace: bool): Future[bool] {.async.} =
   let
     client = newAsyncHttpClient()
   var response: AsyncResponse
-  case language
-  of EN:
+  if not replace:
     response = await client.post(VerifyUrl, multipart=mpd)
-  of CN:
-    response = await client.post(VerifyUrlCN, multipart=mpd) 
+  else:
+    response = await client.post(VerifyUrlReplace, multipart=mpd) 
 
   let
     jsonContent = parseJson(await response.body)
@@ -127,7 +126,7 @@ proc verify*(rc: ReCaptcha, reCaptchaResponse, remoteIp: string): Future[bool] {
     "response": reCaptchaResponse,
     "remoteip": remoteIp
   })
-  result = await checkVerification(multiPart, rc.language)
+  result = await checkVerification(multiPart, rc.replace)
 
 proc verify*(rc: ReCaptcha, reCaptchaResponse: string): Future[bool] {.async.} =
   ## Verify the given reCAPTCHA response.
@@ -135,7 +134,7 @@ proc verify*(rc: ReCaptcha, reCaptchaResponse: string): Future[bool] {.async.} =
     "secret": rc.secret,
     "response": reCaptchaResponse,
   })
-  result = await checkVerification(multiPart, rc.language)
+  result = await checkVerification(multiPart, rc.replace)
 
 when not defined(nimdoc) and isMainModule:
   import os, jester
