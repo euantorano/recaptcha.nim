@@ -37,8 +37,6 @@ const
 </noscript>"""
 
 type
-  Language* = enum
-    EN, CN
   ReCaptcha* = object
     ## reCAPTCHA client information, used to render the reCAPTCHA input and verify user responses.
     secret: string
