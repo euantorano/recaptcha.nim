@@ -2,14 +2,23 @@
 
 import asyncdispatch, httpclient, json
 
+type
+  Provider* = enum
+    Google
+    RecaptchaNet
+    Hcaptcha
+
 const
   VerifyUrl: string = "https://www.google.com/recaptcha/api/siteverify"
-  VerifyUrlReplace: string = "https://recaptcha.net/recaptcha/api/siteverify"
-  CaptchaScript: string = r"""<script src="https://www.google.com/recaptcha/api.js" async defer></script>"""
-  CaptchaScriptReplace: string = r"""<script src="https://recaptcha.net/recaptcha/api.js" async defer></script>"""
-  CaptchaElementStart: string = r"""<div class="g-recaptcha" data-sitekey=""""
-  CaptchaElementEnd: string = r""""></div>"""
-  NoScriptElementStart: string = r"""<noscript>
+  VerifyUrlRecaptchaNet: string = "https://recaptcha.net/recaptcha/api/siteverify"
+  VerifyUrlhCaptcha: string = "https://hcaptcha.com/siteverify"
+  CaptchaScript*: string = """<script src="https://www.google.com/recaptcha/api.js" async defer></script>"""
+  CaptchaScriptRecaptchaNet*: string = """<script src="https://recaptcha.net/recaptcha/api.js" async defer></script>"""
+  CaptchaScriptHcaptcha*: string = """<script src="https://hcaptcha.com/1/api.js" async defer></script>"""
+  CaptchaElementStart: string = """<div class="g-recaptcha" data-sitekey=""""
+  CaptchaElementStartHcaptcha: string = """<div class="h-captcha" data-sitekey=""""
+  CaptchaElementEnd: string = """"></div>"""
+  NoScriptElementStart: string = """<noscript>
   <div>
     <div style="width: 302px; height: 422px; position: relative;">
       <div style="width: 302px; height: 422px; position: absolute;">
@@ -43,22 +52,36 @@ type
       ## The reCAPTCHA secret key.
     siteKey: string
       ## The reCAPTCHA site key.
-    replace: bool
+    provider: Provider
+      ## The catpcha provider: Google, reCaptchaNet, hCaptcha
+    replace {.deprecated.}: bool 
       ## Default use www.google.com.If true, use "www.recaptcha.net".
       ## Docs in https://developers.google.com/recaptcha/docs/faq#can-i-use-recaptcha-globally.
 
   CaptchaVerificationError* = object of Exception
     ## Error thrown if something goes wrong whilst attempting to verify a captcha response.
 
-proc initReCaptcha*(secret, siteKey: string, replace = false): ReCaptcha =
+proc initReCaptcha*(secret, siteKey: string, provider: Provider = Google): ReCaptcha =
   ## Initialise a ReCaptcha instance with the given secret key and site key.
   ##
   ## The secret key and site key can be generated at https://www.google.com/recaptcha/admin
   result = ReCaptcha(
     secret: secret,
     siteKey: siteKey,
-    replace: replace
+    provider: provider
   )
+
+proc initReCaptcha*(secret, siteKey: string, replace = false): ReCaptcha {.deprecated.} =
+  ## Initialise a ReCaptcha instance with the given secret key and site key.
+  ##
+  ## The secret key and site key can be generated at https://www.google.com/recaptcha/admin
+  let provider = if replace: Google else: RecaptchaNet
+  result = ReCaptcha(
+    secret: secret,
+    siteKey: siteKey,
+    provider: provider
+  )
+
 
 proc render*(rc: ReCaptcha, includeNoScript: bool = false): string =
   ## Render the required code to display the captcha.
@@ -66,18 +89,23 @@ proc render*(rc: ReCaptcha, includeNoScript: bool = false): string =
   ## If you set `includeNoScript` to `true`, then the `<noscript>` element required to support browsers without JS will be included in the output.
   ## By default, this is disabled as you have to modify the settings for your reCAPTCHA domain to set the security level to the minimum level to support this.
   ## For more information, see the reCAPTCHA support page: https://developers.google.com/recaptcha/docs/faq#does-recaptcha-support-users-that-dont-have-javascript-enabled
-  result = CaptchaElementStart
+  if rc.provider == Hcaptcha:
+    result = CaptchaElementStartHcaptcha
+  else:
+    result = CaptchaElementStart
   result.add(rc.siteKey)
   result.add(CaptchaElementEnd)
   result.add("\n")
-  if not rc.replace:
+  if rc.provider == Google:
     result.add(CaptchaScript)
-  else:
-    result.add(CaptchaScriptReplace)
+  elif rc.provider == RecaptchaNet:
+    result.add(CaptchaScriptRecaptchaNet)
+  elif rc.provider == Hcaptcha:
+    result.add(CaptchaScriptHcaptcha)
 
-  if includeNoScript:
+  if includeNoScript and rc.provider != Hcaptcha:
     result.add("\n")
-    if not rc.replace:
+    if rc.provider == Google:
       result.add(NoScriptElementStart)
     else:
       result.add(NoScriptElementStartReplace)
@@ -88,14 +116,19 @@ proc `$`*(rc: ReCaptcha): string =
   ## Render the required code to display the captcha.
   result = rc.render()
 
-proc checkVerification(mpd: MultipartData, replace: bool): Future[bool] {.async.} =
+proc checkVerification(mpd: MultipartData, provider: Provider): Future[bool] {.async.} =
   let
     client = newAsyncHttpClient()
-  var response: AsyncResponse
-  if not replace:
+  var
+    response: AsyncResponse
+
+  case provider
+  of Google:
     response = await client.post(VerifyUrl, multipart=mpd)
-  else:
-    response = await client.post(VerifyUrlReplace, multipart=mpd) 
+  of RecaptchaNet:
+    response = await client.post(VerifyUrlRecaptchaNet, multipart=mpd)
+  of Hcaptcha:
+    response = await client.post(VerifyUrlhCaptcha, multipart=mpd)
 
   let
     jsonContent = parseJson(await response.body)
@@ -113,6 +146,8 @@ proc checkVerification(mpd: MultipartData, replace: bool): Future[bool] {.async.
         raise newException(CaptchaVerificationError, "The response parameter is missing.")
       of "invalid-input-response":
         raise newException(CaptchaVerificationError, "The response parameter is invalid or malformed.")
+      of "bad-request":
+        raise newException(CaptchaVerificationError, "The request is invalid or malformed.")
       else: discard
 
   result = if success != nil: success.getBool() else: false
@@ -124,7 +159,7 @@ proc verify*(rc: ReCaptcha, reCaptchaResponse, remoteIp: string): Future[bool] {
     "response": reCaptchaResponse,
     "remoteip": remoteIp
   })
-  result = await checkVerification(multiPart, rc.replace)
+  result = await checkVerification(multiPart, rc.provider)
 
 proc verify*(rc: ReCaptcha, reCaptchaResponse: string): Future[bool] {.async.} =
   ## Verify the given reCAPTCHA response.
@@ -132,7 +167,7 @@ proc verify*(rc: ReCaptcha, reCaptchaResponse: string): Future[bool] {.async.} =
     "secret": rc.secret,
     "response": reCaptchaResponse,
   })
-  result = await checkVerification(multiPart, rc.replace)
+  result = await checkVerification(multiPart, rc.provider)
 
 when not defined(nimdoc) and isMainModule:
   import os, jester
@@ -164,7 +199,7 @@ when not defined(nimdoc) and isMainModule:
       secretKey = getEnv("RECAPTCHA_SECRET")
       siteKey = getEnv("RECAPTCHA_SITEKEY")
 
-    captcha = initReCaptcha(secretKey, siteKey)
+    captcha = initReCaptcha(secretKey, siteKey, Google)
 
     runForever()
 
