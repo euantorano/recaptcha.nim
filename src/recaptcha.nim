@@ -199,7 +199,7 @@ when not defined(nimdoc) and isMainModule:
       secretKey = getEnv("RECAPTCHA_SECRET")
       siteKey = getEnv("RECAPTCHA_SITEKEY")
 
-    captcha = initReCaptcha(secretKey, siteKey)
+    captcha = initReCaptcha(secretKey, siteKey, Google)
 
     runForever()
 
