@@ -116,14 +116,19 @@ proc `$`*(rc: ReCaptcha): string =
   ## Render the required code to display the captcha.
   result = rc.render()
 
-proc checkVerification(mpd: MultipartData, replace: bool): Future[bool] {.async.} =
+proc checkVerification(mpd: MultipartData, provider: Provider): Future[bool] {.async.} =
   let
     client = newAsyncHttpClient()
-  var response: AsyncResponse
-  if not replace:
+  var
+    response: AsyncResponse
+
+  case provider
+  of Google:
     response = await client.post(VerifyUrl, multipart=mpd)
-  else:
-    response = await client.post(VerifyUrlReplace, multipart=mpd) 
+  of RecaptchaNet:
+    response = await client.post(VerifyUrlRecaptchaNet, multipart=mpd)
+  of Hcaptcha:
+    response = await client.post(VerifyUrlhCaptcha, multipart=mpd)
 
   let
     jsonContent = parseJson(await response.body)
@@ -141,6 +146,8 @@ proc checkVerification(mpd: MultipartData, replace: bool): Future[bool] {.async.
         raise newException(CaptchaVerificationError, "The response parameter is missing.")
       of "invalid-input-response":
         raise newException(CaptchaVerificationError, "The response parameter is invalid or malformed.")
+      of "bad-request":
+        raise newException(CaptchaVerificationError, "The request is invalid or malformed.")
       else: discard
 
   result = if success != nil: success.getBool() else: false
