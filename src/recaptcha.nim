@@ -89,18 +89,23 @@ proc render*(rc: ReCaptcha, includeNoScript: bool = false): string =
   ## If you set `includeNoScript` to `true`, then the `<noscript>` element required to support browsers without JS will be included in the output.
   ## By default, this is disabled as you have to modify the settings for your reCAPTCHA domain to set the security level to the minimum level to support this.
   ## For more information, see the reCAPTCHA support page: https://developers.google.com/recaptcha/docs/faq#does-recaptcha-support-users-that-dont-have-javascript-enabled
+  if rc.provider == Hcaptcha:
+    result = CaptchaElementStartHcaptcha
+  else:
   result = CaptchaElementStart
   result.add(rc.siteKey)
   result.add(CaptchaElementEnd)
   result.add("\n")
-  if not rc.replace:
+  if rc.provider == Google:
     result.add(CaptchaScript)
-  else:
-    result.add(CaptchaScriptReplace)
+  elif rc.provider == RecaptchaNet:
+    result.add(CaptchaScriptRecaptchaNet)
+  elif rc.provider == Hcaptcha:
+    result.add(CaptchaScriptHcaptcha)
 
-  if includeNoScript:
+  if includeNoScript and rc.provider != Hcaptcha:
     result.add("\n")
-    if not rc.replace:
+    if rc.provider == Google:
       result.add(NoScriptElementStart)
     else:
       result.add(NoScriptElementStartReplace)
