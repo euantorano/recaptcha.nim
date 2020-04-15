@@ -2,14 +2,23 @@
 
 import asyncdispatch, httpclient, json
 
+type
+  Provider* = enum
+    Google
+    RecaptchaNet
+    Hcaptcha
+
 const
   VerifyUrl: string = "https://www.google.com/recaptcha/api/siteverify"
-  VerifyUrlReplace: string = "https://recaptcha.net/recaptcha/api/siteverify"
-  CaptchaScript: string = r"""<script src="https://www.google.com/recaptcha/api.js" async defer></script>"""
-  CaptchaScriptReplace: string = r"""<script src="https://recaptcha.net/recaptcha/api.js" async defer></script>"""
-  CaptchaElementStart: string = r"""<div class="g-recaptcha" data-sitekey=""""
-  CaptchaElementEnd: string = r""""></div>"""
-  NoScriptElementStart: string = r"""<noscript>
+  VerifyUrlRecaptchaNet: string = "https://recaptcha.net/recaptcha/api/siteverify"
+  VerifyUrlhCaptcha: string = "https://hcaptcha.com/siteverify"
+  CaptchaScript*: string = """<script src="https://www.google.com/recaptcha/api.js" async defer></script>"""
+  CaptchaScriptRecaptchaNet*: string = """<script src="https://recaptcha.net/recaptcha/api.js" async defer></script>"""
+  CaptchaScriptHcaptcha*: string = """<script src="https://hcaptcha.com/1/api.js" async defer></script>"""
+  CaptchaElementStart: string = """<div class="g-recaptcha" data-sitekey=""""
+  CaptchaElementStartHcaptcha: string = """<div class="h-captcha" data-sitekey=""""
+  CaptchaElementEnd: string = """"></div>"""
+  NoScriptElementStart: string = """<noscript>
   <div>
     <div style="width: 302px; height: 422px; position: relative;">
       <div style="width: 302px; height: 422px; position: absolute;">
@@ -43,7 +52,9 @@ type
       ## The reCAPTCHA secret key.
     siteKey: string
       ## The reCAPTCHA site key.
-    replace: bool
+    provider: Provider
+      ## The catpcha provider: Google, reCaptchaNet, hCaptcha
+    replace {.deprecated.}: bool 
       ## Default use www.google.com.If true, use "www.recaptcha.net".
       ## Docs in https://developers.google.com/recaptcha/docs/faq#can-i-use-recaptcha-globally.
 
