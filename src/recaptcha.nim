@@ -152,7 +152,7 @@ proc verify*(rc: ReCaptcha, reCaptchaResponse, remoteIp: string): Future[bool] {
     "response": reCaptchaResponse,
     "remoteip": remoteIp
   })
-  result = await checkVerification(multiPart, rc.replace)
+  result = await checkVerification(multiPart, rc.provider)
 
 proc verify*(rc: ReCaptcha, reCaptchaResponse: string): Future[bool] {.async.} =
   ## Verify the given reCAPTCHA response.
@@ -160,7 +160,7 @@ proc verify*(rc: ReCaptcha, reCaptchaResponse: string): Future[bool] {.async.} =
     "secret": rc.secret,
     "response": reCaptchaResponse,
   })
-  result = await checkVerification(multiPart, rc.replace)
+  result = await checkVerification(multiPart, rc.provider)
 
 when not defined(nimdoc) and isMainModule:
   import os, jester
