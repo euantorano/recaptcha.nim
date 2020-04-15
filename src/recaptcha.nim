@@ -92,7 +92,7 @@ proc render*(rc: ReCaptcha, includeNoScript: bool = false): string =
   if rc.provider == Hcaptcha:
     result = CaptchaElementStartHcaptcha
   else:
-  result = CaptchaElementStart
+    result = CaptchaElementStart
   result.add(rc.siteKey)
   result.add(CaptchaElementEnd)
   result.add("\n")
