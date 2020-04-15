@@ -61,15 +61,27 @@ type
   CaptchaVerificationError* = object of Exception
     ## Error thrown if something goes wrong whilst attempting to verify a captcha response.
 
-proc initReCaptcha*(secret, siteKey: string, replace = false): ReCaptcha =
+proc initReCaptcha*(secret, siteKey: string, provider: Provider = Google): ReCaptcha =
   ## Initialise a ReCaptcha instance with the given secret key and site key.
   ##
   ## The secret key and site key can be generated at https://www.google.com/recaptcha/admin
   result = ReCaptcha(
     secret: secret,
     siteKey: siteKey,
-    replace: replace
+    provider: provider
   )
+
+proc initReCaptcha*(secret, siteKey: string, replace = false): ReCaptcha {.deprecated.} =
+  ## Initialise a ReCaptcha instance with the given secret key and site key.
+  ##
+  ## The secret key and site key can be generated at https://www.google.com/recaptcha/admin
+  let provider = if replace: Google else: RecaptchaNet
+  result = ReCaptcha(
+    secret: secret,
+    siteKey: siteKey,
+    provider: provider
+  )
+
 
 proc render*(rc: ReCaptcha, includeNoScript: bool = false): string =
   ## Render the required code to display the captcha.
